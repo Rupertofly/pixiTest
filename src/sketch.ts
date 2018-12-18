@@ -1,20 +1,22 @@
-import p5 from 'p5';
-import _ from 'lodash';
-import Gh from 'greiner-hormann';
-import * as Vor from 'd3-voronoi';
 import * as PG from 'd3-polygon';
+import * as Vor from 'd3-voronoi';
+import Gh from 'greiner-hormann';
+import _ from 'lodash';
+import p5 from 'p5';
 let p: p5;
+
 export default class Sketch {
-  private sites: { x: number, y: number, t: number, n?: {}[] }[];
+  private sites: Array<{ x: number, y: number, t: number, n?: Array<{}> }>;
   private function: Vor.VoronoiLayout<any>;
-  private diagram: Vor.VoronoiDiagram<any>;
+  private diagram: Vor.VoronoiDiagram<any >;
+
   constructor (instance: p5) {
     p = instance;
     this.sites = _.range(500).map(i => {
       return {
         x: 250 + (50 * _.random(true)),
         y: 250 + (50 * _.random(true)),
-        t: _.random(5),
+        t: _.random( 6 ),
         n: []
       };
 
@@ -45,7 +47,7 @@ export default class Sketch {
     this.diagram.polygons().map(polygon => {
       p.fill(polygon.data.t * (360 / 5), 50, 100);
       const d = polygon.data;
-      let newSite = PG.polygonCentroid(polygon);
+      const newSite = PG.polygonCentroid(polygon);
       d.x = newSite[0];
       d.y = newSite[1];
       d.n = [];
@@ -59,8 +61,8 @@ export default class Sketch {
     });
     this.diagram = this.function(this.sites);
     document.title = p.frameRate().toPrecision(3);
-    let pg = this.diagram.polygons();
-    let visited: { x: number, y: number, t: number, n?: {}[] }[] = [];
-    let rg: Gh.arrPT[] = [];
+    const pg = this.diagram.polygons();
+    const visited: Array<{ x: number, y: number, t: number, n?: Array<{}> }> = [];
+    const rg: Gh.arrPT[] = [];
   }
 }

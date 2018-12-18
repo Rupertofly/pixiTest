@@ -1,7 +1,9 @@
 {
     "defaultSeverity": "warning",
-    "extends": ["tslint-config-standard"],
+    "extends": ["tslint:latest", "tslint-config-standard","tslint-config-prettier"],
     "rules": {
-        "semicolon": true
+        "semicolon": true,
+        "object-literal-sort-keys":false,
+        "no-implicit-dependencies":false
     }
 }
