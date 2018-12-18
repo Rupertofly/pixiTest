@@ -4,8 +4,8 @@ export default function interpolate (t: number, degree: number, points: number[]
   let j;
   let s;
   let l;              // function-scoped iteration variables
-  let n = points.length;    // points count
-  let d = points[0].length; // point dimensionality
+  const n = points.length;    // points count
+  const d = points[0].length; // point dimensionality
 
   if (degree < 1) throw new Error('degree must be at least 1 (linear)');
   if (degree > (n - 1)) throw new Error('degree must be less than or equal to point count - 1');
@@ -28,14 +28,14 @@ export default function interpolate (t: number, degree: number, points: number[]
     if (knots.length !== n + degree + 1) throw new Error('bad knot vector length');
   }
 
-  let domain = [
+  const domain = [
     degree,
     knots.length - 1 - degree
   ];
 
   // remap t to the domain where the spline is defined
-  let low = knots[domain[0]];
-  let high = knots[domain[1]];
+  const low = knots[domain[0]];
+  const high = knots[domain[1]];
   t = t * (high - low) + low;
 
   if (t < low || t > high) throw new Error('out of bounds');
@@ -48,7 +48,7 @@ export default function interpolate (t: number, degree: number, points: number[]
   }
 
   // convert points to homogeneous coordinates
-  let v: number[][] = [];
+  const v: number[][] = [];
   for (i = 0; i < n; i++) {
     v[i] = [];
     for (j = 0; j < d; j++) {

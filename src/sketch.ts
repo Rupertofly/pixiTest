@@ -8,7 +8,7 @@ let p: p5;
 export default class Sketch {
   private sites: Array<{ x: number, y: number, t: number, n?: Array<{}> }>;
   private function: Vor.VoronoiLayout<any>;
-  private diagram: Vor.VoronoiDiagram<any >;
+  private diagram: Vor.VoronoiDiagram<any>;
 
   constructor (instance: p5) {
     p = instance;
