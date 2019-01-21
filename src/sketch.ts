@@ -30,56 +30,21 @@ export default class Sketch {
   }
 
   public setup = () => {
-    p.createCanvas(500, 500);
-    p.colorMode("rgb");
-    p.smooth();
+    p.createCanvas(1000, 1000);
   }
   public draw = () => {
-    // p.translate(-250, -250);
-    this.sites[this.sites.length - 1] = {
-      x: _.clamp(p.mouseX, 0, 500),
-      y: _.clamp(p.mouseY, 0, 500),
-      t: 2,
-      n: []
-    };
-    p.background(255);
-    p.stroke(0, 0, 20);
-    // p.strokeJoin('round');
-    p.strokeWeight( 6 );
-    p.strokeJoin( p.MITER );
-    // Relax and draw;
-
-    this.diagram.polygons().map(polygon => {
-      p.fill( d3.cubehelix( polygon.data.t * ( 360 / 8 ), 1.6, 0.8 ).rgb().hex() );
-      p.stroke(d3.cubehelix( polygon.data.t * ( 360 / 8 ), 1.0, 0.9 ).rgb().hex() );
-      const d = polygon.data;
-      const newSite = PG.polygonCentroid(polygon);
-      d.x = newSite[0];
-      d.y = newSite[1];
-      d.n = [];
-      let npoly;
-      if (p.frameCount > 300){
-      npoly = new Offset().data( [
-        ...polygon,polygon[0]
-      ]).padding(6)[0];
-    } else  npoly = polygon;
-      p.beginShape();
-      npoly.map(point => p.vertex(point[0], point[1]));
-      p.endShape();
-    });
-    this.diagram.links().map(l => {
-      l.source.n.push(l.target);
-      l.target.n.push(l.source);
-    });
-    this.diagram = this.function(this.sites);
-    document.title = p.frameRate().toPrecision(3);
-    const pg = this.diagram.polygons();
-    const visited: Array<{
-      x: number;
-      y: number;
-      t: number;
-      n?: Array<{}>;
-    }> = [];
-    const rg: Gh.arrPT[] = [];
-  }
+    p.loadPixels();
+    const s = 1 / 10;
+    const ts = 1 / 60;
+    const t = p.frameCount / 50;
+    _.range( p.pixels.length ).forEach( i => {
+      const [x, y] = [i % p.width, _.floor( i / p.width )];
+      const v = p.noise( x * s, y * s, t );
+      const n = p.noise( (300+x )* s/2, y * s, t );
+      const m = p.noise( (600+x) * s/2, y * s, t );
+      const c = p.color( d3.cubehelix( (v * 720)%360, 2*n, 0.7+0.2*m ).hex() );
+      p.set( x, y, c );
+    } );
+    p.updatePixels();
+}
 }
