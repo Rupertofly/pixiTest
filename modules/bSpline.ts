@@ -1,4 +1,4 @@
-export default function interpolate (t: number, degree: number, points: number[][], knots?: number[], weights?: number[], result?: number[][] | number[]) {
+export default function interpolate( t: number, degree: number, points: number[][], knots?: number[], weights?: number[], result?: number[][] | number[] ) {
 
   let i;
   let j;
