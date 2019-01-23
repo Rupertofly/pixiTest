@@ -6,6 +6,7 @@
         "object-literal-sort-keys":false,
         "no-implicit-dependencies":false,
         "no-console": false,
-        "no-namespace": false
+        "no-namespace": false,
+        "no-empty":false
     }
 }

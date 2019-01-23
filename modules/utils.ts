@@ -29,10 +29,10 @@ export namespace polygonNamespace {
     return Math.sqrt(distToSegmentSquared(p, v, w));
   }
   /**
+   * Returns the minimum distance between the centroid of a polygon and an edge
    *
+   * @param {[Number, Number][]} poly polygon
    *
-   * @param {[Number, Number][]} poly
-   * @returns Number
    */
   export function getMinDist(poly: pt[]) {
     const c = d3.polygonCentroid(poly);
