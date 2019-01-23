@@ -1,4 +1,5 @@
 // P5 Sketch
+
 import p5 from "p5";
 export default class Sketch {
   private p: p5;

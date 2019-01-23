@@ -1,4 +1,4 @@
-interface CCaptureOptions {
+interface ICCaptureOptions {
     framerate?: number;
     format: 'webm' | 'png' | 'jpg';
     name?: string;
@@ -7,7 +7,7 @@ interface CCaptureOptions {
 }
 
 declare class CCapture {
-    constructor( opts: CCaptureOptions );
+    constructor( opts: ICCaptureOptions );
 
     public start(): void;
     public stop(): void;
