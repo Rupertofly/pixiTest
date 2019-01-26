@@ -14,3 +14,5 @@ declare class CCapture {
     public capture( canvas: CanvasRenderingContext2D ): void;
     public save( cb?: (blob:any)=>void ):void;
 }
+type pt = [number, number];
+type loop = pt[];
