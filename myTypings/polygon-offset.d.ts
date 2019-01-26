@@ -1,5 +1,3 @@
-type pt = [number, number];
-type loop = pt[];
 
 declare module 'polygon-offset' {
   export default class Offset {
