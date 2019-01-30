@@ -19,22 +19,25 @@ export class VorDiagram {
 }
 export class VorCell {
   public position: p5.Vector;
-  public polygon: myPG | null;
-  public centroid: pt | null;
+  public polygon?: myPG;
+  public centroid?: pt;
+  public identifier: string;
+  public colour?: string;
 
-  constructor( x: number, y: number ) {
+
+  constructor( x: number, y: number, i: string ) {
     this.position = new p5.Vector().set( x, y );
-    this.polygon = null;
-    this.centroid = null;
+    this.identifier = i;
   }
-  public set( posArr: pt ): this;
-  public set( x: number, y: number ): this;
-  public set( x: number|pt, y?: number ) {
-    if ( arguments.length > 1 ) {
-      this.position.set( x as number, y );
+  public setPos( posArr: pt ): this;
+  public setPos( x: number, y: number ): this;
+  public setPos( ...args: Array<number|pt> ) {
+    if ( args.length > 1 ) {
+      this.position.set( args[0] as number, args[1] as number );
       return this;
     }
-    this.position.set( arguments[0][0], arguments[0][1] );
+    const point:pt = args[0] as pt;
+    this.position.set( point[0] as number, point[1] as number );
     return this;
   }
   get x() {
@@ -43,9 +46,14 @@ export class VorCell {
   get y() {
     return this.position.y;
   }
-  public calculateCentroid() {
+  public getCentroid() {
     if (!this.polygon) throw new Error('No Polygon Available');
-    this.centroid = Pol.polygonCentroid(this.polygon as myPG);
+    this.centroid = Pol.polygonCentroid( this.polygon as myPG );
+    return this.centroid;
+  }
+  public setPolygon( pgon: Vor.VoronoiPolygon<VorCell> ) {
+    this.polygon = pgon;
+    return this;
   }
 
 
