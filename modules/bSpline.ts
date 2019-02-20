@@ -77,5 +77,5 @@ export default function interpolate( t: number, degree: number, points: number[]
     result[i] = v[s][i] / v[s][d];
   }
 
-  return result;
+  return result as [number,number];
 }
