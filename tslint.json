@@ -9,6 +9,7 @@
         "no-namespace": false,
         "no-empty":false,
         "max-classes-per-file": false,
-        "indent": [true,"spaces",4]
+        "indent": [true,"spaces",4],
+        "prefer-const": false
     }
 }
