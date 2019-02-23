@@ -1,12 +1,11 @@
 // P5 Sketch
+import p5 from 'p5';
+export default function sketch(p: p5) {
+    // Start
 
-import p5 from "p5";
-export default class Sketch {
-  private p: p5;
-  constructor(instance: p5) {
-    this.p = instance;
-  }
+    // Setup
+    p.setup = () => {};
+    // Draw
 
-  public setup(): void{}
-  public draw(): void{}
+    p.draw = () => {};
 }

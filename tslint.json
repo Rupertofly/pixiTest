@@ -1,6 +1,6 @@
 {
     "defaultSeverity": "warning",
-    "extends": ["tslint:latest", "tslint-config-standard"],
+    "extends": ["tslint:latest", "tslint-config-standard","tslint-config-prettier"],
     "rules": {
         "semicolon": true,
         "object-literal-sort-keys":false,
@@ -10,8 +10,6 @@
         "no-empty":false,
         "max-classes-per-file": false,
         "indent": [true,"spaces",4],
-        "strict-type-predicates": false,
-        "ter-indent": [true, 4]
-
+        "prefer-const": false
     }
 }
