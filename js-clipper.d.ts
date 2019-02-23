@@ -59,6 +59,6 @@ declare module 'js-clipper' {
     constructor();
     public AddPath( path: path, join: JoinType, end: EndType ):void;
     public AddPaths( path: paths, join: JoinType, end: EndType ): void;
-    public Execute( solution: path | paths, amount: number ):void;
+    public Execute( solution: path | paths, amount: number ):boolean;
   }
 }

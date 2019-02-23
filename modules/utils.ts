@@ -1,4 +1,4 @@
-import d3 from 'd3-polygon';
+import * as d3 from 'd3';
 import * as cl from 'js-clipper';
 import _ from 'lodash';
 import bSpline from './bSpline';
@@ -50,12 +50,7 @@ export namespace polygonNamespace {
     export function joinPolygons(polygons: lp[]) {
         // Prepare Polygons for Joining
         const adjustedPolygons = polygons.map(poly => {
-            return poly.map(point => {
-                return {
-                    X: Math.floor(point[0] * 1000),
-                    Y: Math.floor(point[1] * 1000)
-                };
-            });
+            return toClipperFormat(poly);
         });
         // Create new Clipper
         const clipper = new cl.Clipper();
@@ -64,21 +59,63 @@ export namespace polygonNamespace {
         clipper.Execute(
             cl.ClipType.ctUnion,
             solution,
+            cl.PolyFillType.pftEvenOdd,
+            cl.PolyFillType.pftEvenOdd
+        );
+        solution = cl.Clipper.SimplifyPolygons(
+            solution,
             cl.PolyFillType.pftEvenOdd
         );
         let output = solution.map(pgon => {
-            return pgon.map(point => {
-                return [point.X / 1000, point.Y / 1000] as pt;
-            });
-        } );
-      return output;
+            return fromClipperFormat(pgon);
+        });
+        return output;
     }
-  export function smoothBSpline( polygon: loop, order: number, resolution: number ) {
-    let output: lp = [];
-    let polygonAdjusted = [...polygon, ...polygon.slice( 0, order )];
-    for ( let t = 0; t < 1; t += 1 / resolution ) {
-      output.push( bSpline( t, order, polygonAdjusted ) );
+    export function offsetPolygon(poly: lp, ammount: number): lp {
+        let adjustedPoly = toClipperFormat(poly);
+        let amt = 1000 * ammount;
+        const offset = new cl.ClipperOffset();
+        let result: cl.IntPoint[][] = [];
+        offset.AddPath(
+            adjustedPoly,
+            cl.JoinType.jtMiter,
+            cl.EndType.etClosedPolygon
+        );
+        let success = offset.Execute(result, amt);
+        if (!result[0]) return fromClipperFormat(adjustedPoly);
+        else return fromClipperFormat(result[0]);
     }
-    return output;
-  }
+    export function fromClipperFormat(polygon: cl.IntPoint[]): lp {
+        return polygon.map(point => {
+            return [point.X / 1000, point.Y / 1000] as pt;
+        });
+    }
+
+    export function toClipperFormat(polygon: lp) {
+        let thePoly = polygon.map(point => {
+            return {
+                X: point[0] * 1000,
+                Y: point[1] * 1000
+            };
+        });
+        return thePoly;
+    }
+
+    export function smoothBSpline(
+        polygon: loop,
+        order: number,
+        resolution: number
+    ) {
+        let output: lp = [];
+        let polygonAdjusted = [
+            ...polygon,
+            ...polygon.slice(0, Math.min(order, polygon.length - 1))
+        ];
+        for (let t = 0; t < 1; t += 1 / resolution) {
+            output.push(
+                bSpline(t, Math.min(order, polygon.length - 1), polygonAdjusted)
+            );
+        }
+        return output;
+    }
 }
