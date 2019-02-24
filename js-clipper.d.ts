@@ -23,16 +23,18 @@ declare module 'js-clipper' {
         ptSubject,
         ptClip
     }
-  export enum JoinType {
-      jtSquare,jtRound,jtMiter
-  }
-  export enum EndType {
-    etOpenSquare,
-    etOpenRound,
-    etOpenButt,
-    etClosedLine,
-    etClosedPolygon
-  }
+    export enum JoinType {
+        jtSquare,
+        jtRound,
+        jtMiter
+    }
+    export enum EndType {
+        etOpenSquare,
+        etOpenRound,
+        etOpenButt,
+        etClosedLine,
+        etClosedPolygon
+    }
 
     export namespace JS {
         function Clean(path: path, amount: number): path;
@@ -50,15 +52,25 @@ declare module 'js-clipper' {
         public AddPaths(paths: paths, type: PolyType, closed: boolean): void;
         public Execute(
             clipType: ClipType,
-            solution: path | paths,
+            solution: path | paths | PolyTree,
             subFillType?: PolyFillType,
             clipFillType?: PolyFillType
         ): boolean;
     }
-  export class ClipperOffset {
-    constructor();
-    public AddPath( path: path, join: JoinType, end: EndType ):void;
-    public AddPaths( path: paths, join: JoinType, end: EndType ): void;
-    public Execute( solution: path | paths, amount: number ):boolean;
-  }
+    export class PolyNode {
+        constructor();
+        public Contour(): path;
+        public IsHole(): boolean;
+        public Childs(): PolyNode[];
+    }
+    export class PolyTree extends PolyNode {
+        constructor();
+        public GetFirst(): PolyNode;
+    }
+    export class ClipperOffset {
+        constructor();
+        public AddPath(path: path, join: JoinType, end: EndType): void;
+        public AddPaths(path: paths, join: JoinType, end: EndType): void;
+        public Execute(solution: path | paths, amount: number): boolean;
+    }
 }
