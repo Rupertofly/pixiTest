@@ -1,4 +1,4 @@
-import *  as Pol from 'd3-polygon';
+import * as Pol from 'd3-polygon';
 import * as Vor from 'd3-voronoi';
 import _ from 'lodash';
 import p5 from 'p5';
@@ -42,7 +42,7 @@ export class VorDiagram {
     }
     public relax(count: number) {
         for (let i = 0; i < count; i++) {
-            this.cells.forEach( cell => cell.relaxCell() );
+            this.cells.forEach(cell => cell.relaxCell());
         }
         this.refresh();
     }
@@ -53,10 +53,12 @@ export class VorCell {
     public centroid?: pt;
     public identifier: string;
     public colour?: string;
+    public opts: { [i:string]: any };
 
     constructor(x: number, y: number, i: string) {
         this.position = new p5.Vector().set(x, y);
         this.identifier = i;
+        this.opts = {};
     }
     public setPos(posArr: pt): this;
     public setPos(x: number, y: number): this;
@@ -66,7 +68,7 @@ export class VorCell {
             return this;
         }
         const point: pt = args[0] as pt;
-        this.position.set(point[0] as number, point[1] as number);
+        this.position.set(point[0], point[1]);
         return this;
     }
     get x() {
