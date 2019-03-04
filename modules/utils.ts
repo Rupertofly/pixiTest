@@ -87,15 +87,15 @@ export namespace polygonNamespace {
     }
     export function fromClipperFormat(polygon: cl.IntPoint[]): lp {
         return polygon.map(point => {
-            return [point.X / 1000, point.Y / 1000] as pt;
+            return [point.X / 10000, point.Y / 10000] as pt;
         });
     }
 
     export function toClipperFormat(polygon: lp) {
         let thePoly = polygon.map(point => {
             return {
-                X: point[0] * 1000,
-                Y: point[1] * 1000
+                X: Math.floor(point[0] * 10000),
+                Y: Math.floor(point[1] * 10000)
             };
         });
         return thePoly;
