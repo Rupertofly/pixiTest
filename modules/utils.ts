@@ -47,6 +47,10 @@ export namespace polygonNamespace {
         });
         return Math.min(...r);
     }
+    export function cleanPolygon( polygon: lp, ammount: number ) {
+        let adjPoly = toClipperFormat( polygon );
+        return fromClipperFormat( cl.JS.Clean( adjPoly, ammount * 10000 ) );
+    }
     export function joinPolygons(polygons: lp[]) {
         // Prepare Polygons for Joining
         const adjustedPolygons = polygons.map(poly => {
