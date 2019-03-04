@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "webpack-dev-server",
-    "chrome": "/Applications/Google\\ Chrome.app/Contents/MacOS/Google\\ Chrome --remote-debugging-port=9092 --app=\"http://localhost:8080/dist\""
+    "chrome": "open /Applications/Chromium.app --args --remote-debugging-port=9092 --app=http://localhost:8080/dist/"
   },
   "keywords": [],
   "author": "",
