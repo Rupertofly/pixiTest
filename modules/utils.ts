@@ -47,9 +47,31 @@ export namespace polygonNamespace {
         });
         return Math.min(...r);
     }
-    export function cleanPolygon( polygon: lp, ammount: number ) {
-        let adjPoly = toClipperFormat( polygon );
-        return fromClipperFormat( cl.JS.Clean( adjPoly, ammount * 10000 ) );
+
+    export function smoothBSpline(
+        polygon: loop,
+        order: number,
+        resolution: number
+    ) {
+        let output: lp = [];
+        let polygonAdjusted = [
+            ...polygon,
+            ...polygon.slice(0, Math.min(order, polygon.length - 1))
+        ];
+        for (let t = 0; t < 1; t += 1 / resolution) {
+            output.push(
+                bSpline(t, Math.min(order, polygon.length - 1), polygonAdjusted)
+            );
+        }
+        return output;
+    }
+}
+export namespace JSClipperHelper {
+    type pt = [number, number];
+    type lp = pt[];
+    export function cleanPolygon(polygon: lp, ammount: number) {
+        let adjPoly = toClipperFormat(polygon);
+        return fromClipperFormat(cl.JS.Clean(adjPoly, ammount * 10000));
     }
     export function joinPolygons(polygons: lp[]) {
         // Prepare Polygons for Joining
@@ -104,22 +126,22 @@ export namespace polygonNamespace {
         });
         return thePoly;
     }
+}
+export class MyPolygon {
+    public polygon: Array<[number, number]> = [];
+    public contours?: Array<Array<[number, number]>>;
 
-    export function smoothBSpline(
-        polygon: loop,
-        order: number,
-        resolution: number
-    ) {
-        let output: lp = [];
-        let polygonAdjusted = [
-            ...polygon,
-            ...polygon.slice(0, Math.min(order, polygon.length - 1))
-        ];
-        for (let t = 0; t < 1; t += 1 / resolution) {
-            output.push(
-                bSpline(t, Math.min(order, polygon.length - 1), polygonAdjusted)
-            );
+    constructor( polygon: loop | cl.ExPolygon | cl.PolyTree, contour?: loop[] ) {
+        
+        if (polygon instanceof cl.ExPolygon) {
+            this.polygon = JSClipperHelper.fromClipperFormat(
+                ( polygon as cl.ExPolygon ).outer || []
+            ) || [];
+            
+        } else if (polygon instanceof cl.PolyTree) {
+        } else if (_.isArray(polygon)) {
+        } else {
+            throw new Error('Wrong Type');
         }
-        return output;
     }
 }
