@@ -92,29 +92,40 @@ export namespace JSClipperHelper {
     let adjPoly = toClipperFormat(polygon);
     return fromClipperFormat(cl.JS.Clean(adjPoly, ammount * 10000));
   }
-  export function joinPolygons(polygons: lp[]) {
-    // Prepare Polygons for Joining
-    const adjustedPolygons = polygons.map(poly => {
-      return toClipperFormat(poly);
-    });
+  export function joinPolygons<T extends Array<lp | MyPolygon>>(polygons: T) {
+    let procPoly: cl.paths = [];
+    let isLoop = true;
+    if ((polygons as MyPolygon[])[0].offset) {
+      isLoop = false;
+      (polygons as MyPolygon[]).forEach(pg => {
+        procPoly.push(...pg.toJSPaths());
+      });
+    } else {
+      // Prepare Polygons for Joining
+      procPoly.push(
+        ...(polygons as lp[]).map(poly => {
+          return toClipperFormat(poly);
+        })
+      );
+    }
     // Create new Clipper
     const clipper = new cl.Clipper();
-    let solution: cl.paths = [[]];
-    clipper.AddPaths(adjustedPolygons, cl.PolyType.ptSubject, true);
+    let solution = new cl.PolyTree();
+    clipper.AddPaths(procPoly, cl.PolyType.ptSubject, true);
     clipper.Execute(
       cl.ClipType.ctUnion,
       solution,
       cl.PolyFillType.pftEvenOdd,
       cl.PolyFillType.pftEvenOdd
     );
-    solution = cl.Clipper.SimplifyPolygons(
-      solution,
-      cl.PolyFillType.pftEvenOdd
-    );
-    let output = solution.map(pgon => {
-      return fromClipperFormat(pgon);
-    });
-    return output;
+    let result = cl.JS.PolyTreeToExPolygons(solution);
+    if (!result[0]) return new MyPolygon(fromClipperFormat(procPoly[0]));
+    else if (result.length < 2) return new MyPolygon(result[0]);
+    else {
+      return result
+        .map(pl => (new MyPolygon(pl)))
+        .sort((a, b) => d3.polygonArea(a.polygon) - d3.polygonArea(b.polygon))[0];
+    }
   }
   export function offsetPolygon(
     poly: lp,
@@ -206,7 +217,6 @@ export class MyPolygon {
         jointype
       );
       return this;
-      
     } else {
       let working: cl.ExPolygon = { outer: null, holes: null };
       working.outer = JSClipperHelper.toClipperFormat(this.polygon);
@@ -221,21 +231,21 @@ export class MyPolygon {
         jointype || cl.JoinType.jtMiter,
         cl.EndType.etClosedPolygon
       );
-        let success = offset.Execute( result, amt );
-        let resEx = cl.JS.PolyTreeToExPolygons( result );
-      if ( !resEx[0] ) {
+      let success = offset.Execute(result, amt);
+      let resEx = cl.JS.PolyTreeToExPolygons(result);
+      if (!resEx[0]) {
         return this;
-      }
-      else if ( resEx.length < 2 ) {
-        let wkEx = this._FromJSExPoly( resEx[0] );
+      } else if (resEx.length < 2) {
+        let wkEx = this._FromJSExPoly(resEx[0]);
         this.polygon = wkEx.polygon;
         this.contours = wkEx.contours;
         return this;
-      }
-      else {
-        let wkEx = 
-          resEx.map(pl => this._FromJSExPoly(pl))
-            .sort( ( a, b ) => d3.polygonArea( a.polygon ) - d3.polygonArea( b.polygon ) )[0];
+      } else {
+        let wkEx = resEx
+          .map(pl => this._FromJSExPoly(pl))
+          .sort(
+            (a, b) => d3.polygonArea(a.polygon) - d3.polygonArea(b.polygon)
+          )[0];
         this.polygon = wkEx.polygon;
         this.contours = wkEx.contours;
         return this;
@@ -255,6 +265,12 @@ export class MyPolygon {
       } else this._drawF(arg1 as vecFunc);
     }
     return this;
+  }
+  public toJSPaths() {
+    let out: cl.paths = [];
+    out.push(JSClipperHelper.toClipperFormat(this.polygon));
+    out.push(...this.contours.map(ctr => JSClipperHelper.toClipperFormat(ctr)));
+    return out;
   }
   private _drawP5(pI: p5) {
     pI.beginShape();
@@ -278,10 +294,12 @@ export class MyPolygon {
   }
   private _FromJSExPoly(ExPoly: cl.ExPolygon) {
     let output: { polygon: lp; contours: lp[] } = { polygon: [], contours: [] };
-    output.polygon = JSClipperHelper.fromClipperFormat( ExPoly.outer as cl.IntPoint[] );
-    output.contours = ( ExPoly.holes || [] ).map( hl => {
-      return JSClipperHelper.fromClipperFormat( hl );
-    } );
+    output.polygon = JSClipperHelper.fromClipperFormat(
+      ExPoly.outer as cl.IntPoint[]
+    );
+    output.contours = (ExPoly.holes || []).map(hl => {
+      return JSClipperHelper.fromClipperFormat(hl);
+    });
     return output;
   }
 }
