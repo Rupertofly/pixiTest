@@ -127,10 +127,10 @@ export class VorCell {
 }
 export class VorRegion {
     public cells: VorCell[];
-    private polygon: loop;
+    private polygon: UT.MyPolygon;
     constructor(firstCell: VorCell) {
         this.cells = [firstCell];
-        this.polygon = firstCell.polygon ? firstCell.polygon : [];
+        this.polygon = new UT.MyPolygon(firstCell.polygon) ? new UT.MyPolygon(firstCell.polygon): new UT.MyPolygon();
     }
     public addCell(cell: VorCell) {
         this.cells.push(cell);
@@ -141,27 +141,6 @@ export class VorRegion {
     }
     private refreshPolygon() {
         // Prepare Polygons for Joining
-        const adjustedPolygons = this.cells.map(cell => {
-            if (!cell.polygon) return;
-            return UT.polygonNamespace.toClipperFormat(cell.polygon);
-        }) as cl.paths;
-        // Create new Clipper
-        const clipper = new cl.Clipper();
-        let solution = new cl.PolyTree();
-        clipper.AddPaths(adjustedPolygons, cl.PolyType.ptSubject, true);
-        clipper.Execute(
-            cl.ClipType.ctUnion,
-            solution,
-            cl.PolyFillType.pftEvenOdd,
-            cl.PolyFillType.pftEvenOdd
-        );
-        // console.log( solution );
-        let outer = solution.GetFirst();
-        this.polygon = UT.polygonNamespace.fromClipperFormat( outer.Contour() );
-        // throw new Error("well this didn't work");
-        // let output = solution.map(pgon => {
-        //     return UT.polygonNamespace.fromClipperFormat(pgon);
-        // });
-        // return output;
+      this.polygon = UT.JSClipperHelper.joinPolygons( this.cells.map( c => c.polygon as loop ) );
     }
 }
