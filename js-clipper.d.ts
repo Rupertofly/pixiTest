@@ -39,6 +39,10 @@ declare module 'js-clipper' {
     export namespace JS {
         function Clean(path: path, amount: number): path;
         function Clean(path: paths, amount: number): paths;
+        function ExPolygonsToPaths(ExPoly: ExPolygon[]): paths;
+        function PolyTreeToExPolygons(
+            PolyTree: PolyTree | PolyNode
+        ): ExPolygon[];
     }
     export class Clipper {
         public static SimplifyPolygons(
@@ -73,4 +77,10 @@ declare module 'js-clipper' {
         public AddPaths(path: paths, join: JoinType, end: EndType): void;
         public Execute(solution: path | paths, amount: number): boolean;
     }
+    interface ExPolygon {
+        outer: null | path;
+        holes: null | paths;
+    }
+    export function ExPolygon(): ExPolygon;
+    export function ExPolygons(): ExPolygon[];
 }
