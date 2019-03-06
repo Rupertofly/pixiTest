@@ -206,6 +206,7 @@ export class MyPolygon {
         jointype
       );
       return this;
+      
     } else {
       let working: cl.ExPolygon = { outer: null, holes: null };
       working.outer = JSClipperHelper.toClipperFormat(this.polygon);
