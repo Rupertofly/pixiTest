@@ -3,17 +3,16 @@ import * as cl from 'js-clipper';
 import _ from 'lodash';
 import p5 from 'p5';
 import bSpline from './bSpline';
-
+type point = [number, number];
+type lp = point[];
 export namespace polygonNamespace {
-  type pt = [number, number];
-  type lp = pt[];
   function sqr(x: number) {
     return x * x;
   }
-  function dist2(v: pt, w: pt) {
+  function dist2(v: point, w: point) {
     return sqr(v[0] - w[0]) + sqr(v[1] - w[1]);
   }
-  function distToSegmentSquared(p: pt, v: pt, w: pt) {
+  function distToSegmentSquared(p: point, v: point, w: point) {
     const l2 = dist2(v, w);
     if (l2 === 0) return dist2(p, v);
     let t =
@@ -29,7 +28,7 @@ export namespace polygonNamespace {
    * @param {[Number,Number]} second line vertice
    * @returns {Number} Distance
    */
-  export function distToSegment(p: pt, v: pt, w: pt) {
+  export function distToSegment(p: point, v: point, w: point) {
     return Math.sqrt(distToSegmentSquared(p, v, w));
   }
   /**
@@ -38,7 +37,7 @@ export namespace polygonNamespace {
    * @param {[Number, Number][]} poly polygon
    *
    */
-  export function getMinDist(poly: pt[]) {
+  export function getMinDist(poly: point[]) {
     const c = d3.polygonCentroid(poly);
     const r = _.range(poly.length).map(i => {
       const thisP = poly[i];
@@ -65,32 +64,30 @@ export namespace polygonNamespace {
     }
     return output;
   }
-  export function smoothPolygon<T extends loop | MyPolygon >(
+  export function smoothPolygon<T extends loop | MyPolygon>(
     polygon: T,
     order: number,
     resolution: number
   ) {
     if (_.isArray((polygon as lp)[0])) {
       return smoothBSpline(polygon as lp, order, resolution) as T;
-    } else if ( ( polygon as MyPolygon ).isComplex ) {
+    } else if ((polygon as MyPolygon).isComplex) {
       let outPoly = new MyPolygon();
       outPoly.polygon = smoothBSpline(
         (polygon as MyPolygon).polygon,
         order,
         resolution
       );
-      outPoly.contours = ( polygon as MyPolygon ).contours.map( ctr => {
-        return smoothBSpline( ctr, order, resolution );
-      } );
+      outPoly.contours = (polygon as MyPolygon).contours.map(ctr => {
+        return smoothBSpline(ctr, order, resolution);
+      });
       return outPoly as T;
     } else {
-      throw new Error( 'wat' );
+      throw new Error('wat');
     }
   }
 }
 export namespace JSClipperHelper {
-  type pt = [number, number];
-  type lp = pt[];
   export function cleanPolygon(polygon: lp, ammount: number) {
     let adjPoly = toClipperFormat(polygon);
     return fromClipperFormat(cl.JS.Clean(adjPoly, ammount * 10000));
@@ -119,31 +116,40 @@ export namespace JSClipperHelper {
     });
     return output;
   }
-  export function offsetPolygon(poly: lp, ammount: number): lp {
+  export function offsetPolygon(
+    poly: lp,
+    ammount: number,
+    jType?: cl.JoinType
+  ): lp {
     let adjustedPoly = toClipperFormat(poly);
     let amt = 1000 * ammount;
     const offset = new cl.ClipperOffset();
     let result: cl.IntPoint[][] = [];
     offset.AddPath(
       adjustedPoly,
-      cl.JoinType.jtMiter,
+      jType || cl.JoinType.jtMiter,
       cl.EndType.etClosedPolygon
     );
     let success = offset.Execute(result, amt);
     if (!result[0]) return fromClipperFormat(adjustedPoly);
-    else return fromClipperFormat(result[0]);
+    else if (result.length < 2) return fromClipperFormat(result[0]);
+    else {
+      return result
+        .map(pl => fromClipperFormat(pl))
+        .sort((a, b) => d3.polygonArea(a) - d3.polygonArea(b))[0];
+    }
   }
   export function fromClipperFormat(polygon: cl.IntPoint[]): lp {
-    return polygon.map(point => {
-      return [point.X / 10000, point.Y / 10000] as pt;
+    return polygon.map(pt => {
+      return [pt.X / 10000, pt.Y / 10000] as point;
     });
   }
 
   export function toClipperFormat(polygon: lp) {
-    let thePoly = polygon.map(point => {
+    let thePoly = polygon.map(pt => {
       return {
-        X: Math.floor(point[0] * 10000),
-        Y: Math.floor(point[1] * 10000)
+        X: Math.floor(pt[0] * 10000),
+        Y: Math.floor(pt[1] * 10000)
       };
     });
     return thePoly;
@@ -186,10 +192,55 @@ export class MyPolygon {
   public isComplex() {
     return this.contours.length > 0;
   }
-  public smooth( order: number, resolution: number ) {
-    let wk = polygonNamespace.smoothPolygon( this, order, resolution );
+  public smooth(order: number, resolution: number) {
+    let wk = polygonNamespace.smoothPolygon(this, order, resolution);
     this.polygon = wk.polygon;
     this.contours = wk.contours;
+    return this;
+  }
+  public offset(ammount: number, jointype?: cl.JoinType) {
+    if (!this.isComplex()) {
+      this.polygon = JSClipperHelper.offsetPolygon(
+        this.polygon,
+        ammount,
+        jointype
+      );
+      return this;
+    } else {
+      let working: cl.ExPolygon = { outer: null, holes: null };
+      working.outer = JSClipperHelper.toClipperFormat(this.polygon);
+      working.holes = this.contours.map(ctr =>
+        JSClipperHelper.toClipperFormat(ctr)
+      );
+      let amt = 1000 * ammount;
+      const offset = new cl.ClipperOffset();
+      let result = new cl.PolyTree();
+      offset.AddPaths(
+        cl.JS.ExPolygonsToPaths([working]),
+        jointype || cl.JoinType.jtMiter,
+        cl.EndType.etClosedPolygon
+      );
+        let success = offset.Execute( result, amt );
+        let resEx = cl.JS.PolyTreeToExPolygons( result );
+      if ( !resEx[0] ) {
+        return this;
+      }
+      else if ( resEx.length < 2 ) {
+        let wkEx = this._FromJSExPoly( resEx[0] );
+        this.polygon = wkEx.polygon;
+        this.contours = wkEx.contours;
+        return this;
+      }
+      else {
+        let wkEx = 
+          resEx.map(pl => this._FromJSExPoly(pl))
+            .sort( ( a, b ) => d3.polygonArea( a.polygon ) - d3.polygonArea( b.polygon ) )[0];
+        this.polygon = wkEx.polygon;
+        this.contours = wkEx.contours;
+        return this;
+      }
+    }
+
     return this;
   }
   public draw(pI: p5): this;
@@ -223,5 +274,13 @@ export class MyPolygon {
         contour.forEach(pt => cFunc(...pt));
       });
     }
+  }
+  private _FromJSExPoly(ExPoly: cl.ExPolygon) {
+    let output: { polygon: lp; contours: lp[] } = { polygon: [], contours: [] };
+    output.polygon = JSClipperHelper.fromClipperFormat( ExPoly.outer as cl.IntPoint[] );
+    output.contours = ( ExPoly.holes || [] ).map( hl => {
+      return JSClipperHelper.fromClipperFormat( hl );
+    } );
+    return output;
   }
 }

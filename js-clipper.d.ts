@@ -75,7 +75,7 @@ declare module 'js-clipper' {
         constructor();
         public AddPath(path: path, join: JoinType, end: EndType): void;
         public AddPaths(path: paths, join: JoinType, end: EndType): void;
-        public Execute(solution: path | paths, amount: number): boolean;
+        public Execute(solution: path | paths| PolyTree, amount: number): boolean;
     }
     interface ExPolygon {
         outer: null | path;
