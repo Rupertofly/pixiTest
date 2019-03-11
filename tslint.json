@@ -10,6 +10,8 @@
         "no-empty":false,
         "max-classes-per-file": false,
         "indent": [true,"spaces",2],
-        "prefer-const": false
+        "prefer-const": false,
+        "member-access": false,
+        "unified-signatures": false
     }
 }
