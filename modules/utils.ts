@@ -123,8 +123,10 @@ export namespace JSClipperHelper {
     else if (result.length < 2) return new MyPolygon(result[0]);
     else {
       return result
-        .map(pl => (new MyPolygon(pl)))
-        .sort((a, b) => d3.polygonArea(a.polygon) - d3.polygonArea(b.polygon))[0];
+        .map(pl => new MyPolygon(pl))
+        .sort(
+          (a, b) => d3.polygonArea(a.polygon) - d3.polygonArea(b.polygon)
+        )[0];
     }
   }
   export function offsetPolygon(
@@ -235,17 +237,8 @@ export class MyPolygon {
       let resEx = cl.JS.PolyTreeToExPolygons(result);
       if (!resEx[0]) {
         return this;
-      } else if (resEx.length < 2) {
-        let wkEx = this._FromJSExPoly(resEx[0]);
-        this.polygon = wkEx.polygon;
-        this.contours = wkEx.contours;
-        return this;
       } else {
-        let wkEx = resEx
-          .map(pl => this._FromJSExPoly(pl))
-          .sort(
-            (a, b) => d3.polygonArea(a.polygon) - d3.polygonArea(b.polygon)
-          )[0];
+        let wkEx = this.FromJSExPoly(resEx[0]);
         this.polygon = wkEx.polygon;
         this.contours = wkEx.contours;
         return this;
@@ -272,6 +265,16 @@ export class MyPolygon {
     out.push(...this.contours.map(ctr => JSClipperHelper.toClipperFormat(ctr)));
     return out;
   }
+  public FromJSExPoly(ExPoly: cl.ExPolygon) {
+    let output: { polygon: lp; contours: lp[] } = { polygon: [], contours: [] };
+    output.polygon = JSClipperHelper.fromClipperFormat(
+      ExPoly.outer as cl.IntPoint[]
+    );
+    output.contours = (ExPoly.holes || []).map(hl => {
+      return JSClipperHelper.fromClipperFormat(hl);
+    });
+    return output;
+  }
   private _drawP5(pI: p5) {
     pI.beginShape();
     this.polygon.forEach(pt => pI.vertex(pt[0], pt[1]));
@@ -292,14 +295,25 @@ export class MyPolygon {
       });
     }
   }
-  private _FromJSExPoly(ExPoly: cl.ExPolygon) {
-    let output: { polygon: lp; contours: lp[] } = { polygon: [], contours: [] };
-    output.polygon = JSClipperHelper.fromClipperFormat(
-      ExPoly.outer as cl.IntPoint[]
-    );
-    output.contours = (ExPoly.holes || []).map(hl => {
-      return JSClipperHelper.fromClipperFormat(hl);
-    });
-    return output;
+}
+export class NoiseLoop {
+  diameter: number;
+  min: number;
+  max: number;
+  xC: number;
+  yC: number;
+
+  constructor( private p: p5, diam: number, min: number, max: number ) {
+    this.diameter = diam;
+    this.min = min;
+    this.max = max;
+    this.xC = p.random( 5000 );
+    this.yC = p.random( 5000 );
+  }
+  get( a: number ) {
+    let p = this.p;
+   let xOff = this.p.map( this.p.cos( a ), -1, 1, 0, this.diameter );
+    let yOff = this.p.map( this.p.sin( a ), -1, 1, 0, this.diameter );
+    return p.map( p.noise( this.xC + xOff, this.yC + yOff ), 0, 1, this.min, this.max );
   }
 }
