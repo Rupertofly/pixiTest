@@ -26,5 +26,12 @@ export default class Noise {
     get isP5() {
         return this._isp5;
     }
+  public get( t: number ) {
+    let a = t * Math.PI * 2;
+    let x = this.xCen + ( this.diam * Math.cos( a ) );
+    let y = this.yCen + ( this.diam * Math.sin( a ) );
+    return this.thisFunc( x, y );
+
+  }
 
 }
