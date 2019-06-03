@@ -1,14 +1,33 @@
-export default function interpolate( t: number, degree: number, points: number[][], knots?: number[], weights?: number[], result?: number[][] | number[] ) {
+export default function interpolate(
+  t: number,
+  degree: number,
+  points: Array<[number, number]>,
+  closed: boolean = false,
+  knots?: number[],
+  weights?: number[],
+  result?: number[][] | number[]
+) {
+  let pts: Array<[number, number]> = [...points];
+  if (closed) {
+    pts = [...points, ...points.slice(0, Math.min(t, points.length))];
+  } else {
+    for (let temp = 0; temp < Math.floor(t); temp++) {
+      pts.unshift(pts[0]);
+      pts.push(pts[pts.length - 1]);
+    }
+  }
 
-  let i;
-  let j;
-  let s;
-  let l;              // function-scoped iteration variables
-  const n = points.length;    // points count
-  const d = points[0].length; // point dimensionality
+  let i: number;
+  let j: number;
+  let s: number;
+  let l: number; // function-scoped iteration variables
+  const n = pts.length; // points count
+  const d = pts[0].length; // point dimensionality
 
   if (degree < 1) throw new Error('degree must be at least 1 (linear)');
-  if (degree > (n - 1)) throw new Error('degree must be less than or equal to point count - 1');
+  if (degree > n - 1) {
+    throw new Error('degree must be less than or equal to point count - 1');
+  }
 
   if (!weights) {
     // build weight vector of length [n]
@@ -25,13 +44,12 @@ export default function interpolate( t: number, degree: number, points: number[]
       knots[i] = i;
     }
   } else {
-    if (knots.length !== n + degree + 1) throw new Error('bad knot vector length');
+    if (knots.length !== n + degree + 1) {
+      throw new Error('bad knot vector length');
+    }
   }
 
-  const domain = [
-    degree,
-    knots.length - 1 - degree
-  ];
+  const domain = [degree, knots.length - 1 - degree];
 
   // remap t to the domain where the spline is defined
   const low = knots[domain[0]];
@@ -52,7 +70,7 @@ export default function interpolate( t: number, degree: number, points: number[]
   for (i = 0; i < n; i++) {
     v[i] = [];
     for (j = 0; j < d; j++) {
-      v[i][j] = points[i][j] * weights[i];
+      v[i][j] = pts[i][j] * weights[i];
     }
     v[i][d] = weights[i];
   }
@@ -77,5 +95,5 @@ export default function interpolate( t: number, degree: number, points: number[]
     result[i] = v[s][i] / v[s][d];
   }
 
-  return result as [number,number];
+  return result as [number, number];
 }
