@@ -40,7 +40,7 @@
     "flubber": "^0.4.2",
     "js-angusj-clipper": "^1.0.1",
     "js-clipper": "^1.0.1",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.19",
     "p5": "^0.7.2",
     "pixi.js": "^4.8.2",
     "polygon-offset": "^0.3.1",
